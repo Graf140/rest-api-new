@@ -9,12 +9,27 @@ from werkzeug.security import generate_password_hash, check_password_hash #та�
 import psycopg2 #бд
 from psycopg2.extras import RealDictCursor
 
-DB_CONFIG = {
-    'host': '127.0.0.1',
-    'database': 'pupok_db',
-    'user': 'pupok',
-    'password': 'avtobus'
-}
+connection = psycopg2.connect(
+    database="users",
+    user="postgres",
+    password="admin",
+    host="127.0.0.1",
+    port="5432"
+)
+
+cur = connection.cursor()
+table = cur.execute('''
+    CREATE TABLE IF NOT EXIST user_table (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        password_hash TEXT NOT NULL 
+    ) ;
+''')
+
+
+connection.commit()
+connection.close()
+
 
 app = Flask(__name__)
 app.secret_key = "avtobus"
