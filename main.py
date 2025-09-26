@@ -114,39 +114,17 @@ class User:
 
 
 #rest-api работа
-@app.route("/", methods = ['GET']) #простенькая проверка
-def avtobus():
-    return "Воркает"
 
 
-@app.route("/api/user/", methods = ['GET']) #вернёт всех пользователей
-def get_all_users():
-    all_users = User.get_all_users()
-    return jsonify([user for user in all_users]), 200
+# @app.route("/api/user/", methods = ['GET']) #вернёт всех пользователей
+# def get_all_users():
+#     all_users = User.get_all_users()
+#     return jsonify([user for user in all_users]), 200
 
 
-# @app.route("/api/user/<int:user_id>/", methods = ['GET']) #гет для айдишника
-# def get_current_user(user_id):
-#     for user in all_users:
-#         if user.user_id == user_id:
-#             return jsonify(user.to_dict())
-#     #если до сюда дошло, формально, ничего не нашло. так шо ашЫбка
-#     return jsonify({"Error": "In your id code there's no user"}), 400
-
-
-# @app.route("/api/user/", methods = ['POST']) #нового пользователя накидали, проверочная тема через postman
-# def put_or_reload_user():
-#     data = request.get_json()
-#     for user in all_users:
-#         if "user_id" in data and data["user_id"] is not None:
-#             if user.user_id == data["user_id"]:
-#                 return jsonify({"Error": "Current id is in our data"})
-#     #если дошло отсюда - всё круто, воркаем
-#     tempuser = User(name=data["name"], user_id=data.get("user_id", password = generate_password_hash(12345678)))
-#     all_users.append(tempuser)
-#     return jsonify({"Successfull": "Your user is added",
-#                     "User": tempuser.to_dict()}), 201
-
+@app.route("/", methods = ['GET'])
+def main():
+    return render_template("hub.html")
 
 @app.route("/reg/", methods = ['POST'])
 def reg_form_post():
@@ -173,6 +151,11 @@ def reg_form_get():
     return render_template('register.html')
 
 
+@app.route("/dashboard")
+def dashboard():
+    return render_template("rickroll.html")
+
+
 @app.route("/log/", methods=['GET'])
 def log_form_get():
     return render_template('login.html')
@@ -185,10 +168,20 @@ def log_form_post():
 
     if User.check_user(username, password):
         flash("Успех, авторизация прошла успешно", "success")
-        return redirect(url_for('reg_form_get'))
+        return redirect(url_for('dashboard'))
     else:
         flash("Ошибка: логин или пароль не верны", "error")
         return redirect(url_for('reg_form_get'))
+
+
+    #после логирования на rick-roll(vibe-codding)
+
+
+#ОБЯЗАТЕЛЬНО ПОСЛЕДНИЙ
+@app.route("/", defaults={"path": ""})  # перенаправление всего
+@app.route("/<path:path>")
+def avtobus(path):
+    return render_template("404.html")
 
 
 if __name__ == "__main__":
