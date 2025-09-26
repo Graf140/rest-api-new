@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html >
+<html>
 <head>
   <meta charset="UTF-8">
   <title>Пройдите регистрацию</title>
@@ -21,9 +21,9 @@
       {% endfor %}
     {% endif %}
   {% endwith %}
-  <form class='login-form' action="/reg" method="POST">
+  <form class='login-form' action="/reg/" method="POST">
     <div class="flex-row logo">
-    <h1>LOGO</h1>
+    <h1>Окно регистрации</h1>
   </div>
   <div class="flex-row">
     <input id="username" name="username" class='lf--input' placeholder='Your username' type='text'>
@@ -32,7 +32,7 @@
     <input id="password" name="password" class='lf--input' placeholder='Your password' type='password'>
   </div>
   <input class='lf--submit' type='submit' value='Зарегистрироваться'>
-  <a class='lf--forgot' href='/log'>Уже есть аккаунт? Поехали!</a>
+  <a class='lf--forgot' href='/log'>Уже есть аккаунт? Авторизуйся!</a>
 </form>
   
   

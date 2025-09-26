@@ -9,32 +9,24 @@ from werkzeug.security import generate_password_hash, check_password_hash #та�
 import psycopg2 #бд
 from psycopg2.extras import RealDictCursor
 
-connection = psycopg2.connect(
-    database="users",
-    user="postgres",
-    password="admin",
-    host="127.0.0.1",
-    port="5432"
-)
-
-cur = connection.cursor()
-table = cur.execute('''
-    CREATE TABLE IF NOT EXIST user_table (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        password_hash TEXT NOT NULL 
-    ) ;
-''')
-
-
-connection.commit()
-connection.close()
+def get_db_connection():
+    try:
+        conn = psycopg2.connect(
+            host='localhost',
+            database='user_db',
+            user='postgres',
+            password='admin'
+        )
+        return conn
+    except psycopg2.Error as e:
+        print(f"Ошибка подключения к БД: {e}")
+        raise
 
 
 app = Flask(__name__)
 app.secret_key = "avtobus"
 
-
+#жоский класс с импортированной бд(чутка воркинга)
 class User:
     quantity = 1
 
@@ -49,30 +41,77 @@ class User:
         User.quantity += 1
 
 
-    # def get_name(self):
-    #     return self.name
-    #
-    #
-    # def get_user_id(self):
-    #     return self.user_id
+    @staticmethod
+    def get_all_users():
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute('SELECT * FROM users')
+        users = cur.fetchall()
+        cur.close()
+        conn.close()
+        return users
+
+    @staticmethod
+    def get_users_count():
+        conn = get_db_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute('SELECT COUNT(*) FROM users')
+            count = cur.fetchone()[0]
+            return count
+        finally:
+            cur.close()
+            conn.close()
 
 
-    def to_dict(self):
-        return {
-                "name": self.name,
-                "user_id": self.user_id
-        }
+    @staticmethod
+    def get_user_by_id(user_id):
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute('SELECT * FROM users WHERE user_id = %s', (user_id,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+        return user
 
 
-    def update_id(self, user_id):
-        self.user_id = user_id
+    @staticmethod
+    def add_user(name, password_hash):
+        conn = get_db_connection()
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute('SELECT 1 FROM users WHERE name = %s', (name,))
+            if cur.fetchone():
+                print(f"Ошибка: пользователь с именем '{name}' уже существует.")
+                return False
+            cur.execute('INSERT INTO users (name, password_hash) VALUES (%s, %s)', (name, password_hash))
+            conn.commit()
+            return True
+
+        except Exception as e:
+            # Любая ошибка
+            conn.rollback()
+            print(f"Неожиданная ошибка при добавлении пользователя: {e}")
+            return False
+
+        finally:
+            cur.close()
+            conn.close()
 
 
-    def update_name(self, name):
-        self.name = name
 
+    @staticmethod
+    def check_user(name, password): #ОБЯЗАТЕЛЬНО пароль, а не кеш
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute('SELECT * FROM users WHERE name = %s', (name,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+        if user and check_password_hash(user['password_hash'], password):
+            return True
+        return False
 
-all_users = []
 
 #rest-api работа
 @app.route("/", methods = ['GET']) #простенькая проверка
@@ -82,19 +121,20 @@ def avtobus():
 
 @app.route("/api/user/", methods = ['GET']) #вернёт всех пользователей
 def get_all_users():
-    return jsonify([user.to_dict() for user in all_users]), 200
+    all_users = User.get_all_users()
+    return jsonify([user for user in all_users]), 200
 
 
-@app.route("/api/user/<int:user_id>/", methods = ['GET']) #гет для айдишника
-def get_current_user(user_id):
-    for user in all_users:
-        if user.user_id == user_id:
-            return jsonify(user.to_dict())
-    #если до сюда дошло, формально, ничего не нашло. так шо ашЫбка
-    return jsonify({"Error": "In your id code there's no user"}), 400
+# @app.route("/api/user/<int:user_id>/", methods = ['GET']) #гет для айдишника
+# def get_current_user(user_id):
+#     for user in all_users:
+#         if user.user_id == user_id:
+#             return jsonify(user.to_dict())
+#     #если до сюда дошло, формально, ничего не нашло. так шо ашЫбка
+#     return jsonify({"Error": "In your id code there's no user"}), 400
 
 
-# @app.route("/api/user/", methods = ['POST']) #нового пользователя накидали, проверочная тема
+# @app.route("/api/user/", methods = ['POST']) #нового пользователя накидали, проверочная тема через postman
 # def put_or_reload_user():
 #     data = request.get_json()
 #     for user in all_users:
@@ -118,11 +158,14 @@ def reg_form_post():
         return redirect(url_for('reg_form_get'))
 
     hashed_password = generate_password_hash(password)
-    tempuser = User(name=username, password=hashed_password)
-    all_users.append(tempuser)
+    #all_users.append(tempuser) #было до ДБ, сейчас с бд
 
-    flash("Регистрация успешна, теперь авторизируйтесь!", "success")
-    return redirect(url_for('log_form_get'))
+    if User.add_user(username, hashed_password):
+        flash("Регистрация успешна, теперь авторизируйтесь!", "success")
+        return redirect(url_for('log_form_get'))
+    else:
+        flash("Ошибка при регистрации. Пользователь не добавлен.", "error")
+        return redirect(url_for('reg_form_get'))
 
 
 @app.route("/reg/", methods = ['GET'])
@@ -140,19 +183,20 @@ def log_form_post():
     username = request.form.get('username')
     password = request.form.get('password')
 
-    if not username or not password:
-        flash("Пожалуйста, введите свой логин или пароль!", "error")
-        return redirect(url_for('log_form_get'))
-
-    for user in all_users:
-        if user.name == username:
-            if check_password_hash(user.password, password):
-                flash(f"Добро пожаловать, {username}!", "success")
-                return redirect(url_for('avtobus'))
-
-    flash(f"Не правильный логин или пароль", "error")
-    return redirect(url_for('log_form_get'))
+    if User.check_user(username, password):
+        flash("Успех, авторизация прошла успешно", "success")
+        return redirect(url_for('reg_form_get'))
+    else:
+        flash("Ошибка: логин или пароль не верны", "error")
+        return redirect(url_for('reg_form_get'))
 
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+    #просто технический код для моего удобства при переносе с устройства на устройство(не удобно базы данных переносить(((()
+# CREATE TABLE public.users (
+#     user_id SERIAL PRIMARY KEY,
+#     name TEXT NOT NULL UNIQUE,
+#     password_hash TEXT NOT NULL
+# );
