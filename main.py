@@ -83,16 +83,16 @@ class User:
             cur.execute('SELECT 1 FROM users WHERE name = %s', (name,))
             if cur.fetchone():
                 print(f"Ошибка: пользователь с именем '{name}' уже существует.")
-                return False
+                return ("False users")
             cur.execute('INSERT INTO users (name, password_hash) VALUES (%s, %s)', (name, password_hash))
             conn.commit()
-            return True
+            return ("True")
 
         except Exception as e:
             # Любая ошибка
             conn.rollback()
             print(f"Неожиданная ошибка при добавлении пользователя: {e}")
-            return False
+            return ("False")
 
         finally:
             cur.close()
@@ -130,17 +130,25 @@ def main():
 def reg_form_post():
     username = request.form.get('username')
     password = request.form.get('password')
+    confirm_password = request.form.get('confirm_password')
 
     if not username or not password:
         flash("Обязательно введите имя пользователя и пароль!", "error")
         return redirect(url_for('reg_form_get'))
 
+    if password != confirm_password:
+        flash("Ваши пароли не совпадают!", "error")
+        return redirect(url_for('reg_form_get'))
+
     hashed_password = generate_password_hash(password)
     #all_users.append(tempuser) #было до ДБ, сейчас с бд
-
-    if User.add_user(username, hashed_password):
+    result = User.add_user(username, hashed_password)
+    if result == "True":
         flash("Регистрация успешна, теперь авторизируйтесь!", "success")
         return redirect(url_for('log_form_get'))
+    elif result == "False users":
+        flash("Ошибка при регистрации. Введенное имя пользователя уже существует", "error")
+        return redirect(url_for('reg_form_get'))
     else:
         flash("Ошибка при регистрации. Пользователь не добавлен.", "error")
         return redirect(url_for('reg_form_get'))
@@ -151,7 +159,7 @@ def reg_form_get():
     return render_template('register.html')
 
 
-@app.route("/dashboard")
+@app.route("/dashboard/")
 def dashboard():
     return render_template("rickroll.html")
 
@@ -171,7 +179,7 @@ def log_form_post():
         return redirect(url_for('dashboard'))
     else:
         flash("Ошибка: логин или пароль не верны", "error")
-        return redirect(url_for('reg_form_get'))
+        return redirect(url_for('log_form_get'))
 
 
     #после логирования на rick-roll(vibe-codding)
