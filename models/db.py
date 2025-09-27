@@ -1,3 +1,4 @@
+# Data Access Layer
 import psycopg2 #бд
 from psycopg2.extras import RealDictCursor
 

@@ -1,31 +1,31 @@
-from flask import Flask, jsonify
-from flask import request
-from flask import url_for
-from flask import render_template
-from flask import flash, redirect #пароли чичас
-
-from werkzeug.security import generate_password_hash, check_password_hash #также пароли
-
-import psycopg2 #бд
-from psycopg2.extras import RealDictCursor
+# from flask import Flask, jsonify
+# from flask import request
+# from flask import url_for
+# from flask import render_template
+# from flask import flash, redirect #пароли чичас
+#
+# from werkzeug.security import generate_password_hash, check_password_hash #также пароли
+#
+# import psycopg2 #бд
+# from psycopg2.extras import RealDictCursor
 
 #!!!ПЕРЕНЕС
-def get_db_connection():
-    try:
-        conn = psycopg2.connect(
-            host='localhost',
-            database='user_db',
-            user='postgres',
-            password='admin'
-        )
-        return conn
-    except psycopg2.Error as e:
-        print(f"Ошибка подключения к БД: {e}")
-        raise
+# def get_db_connection():
+#     try:
+#         conn = psycopg2.connect(
+#             host='localhost',
+#             database='user_db',
+#             user='postgres',
+#             password='admin'
+#         )
+#         return conn
+#     except psycopg2.Error as e:
+#         print(f"Ошибка подключения к БД: {e}")
+#         raise
 
 
-app = Flask(__name__)
-app.secret_key = "avtobus"
+# app = Flask(__name__)
+# app.secret_key = "avtobus"
 
 #жоский класс с импортированной бд(чутка воркинга)  !!!ПЕРЕНЕС
 # class User:
@@ -115,10 +115,11 @@ app.secret_key = "avtobus"
 #rest-api работа(ROUTES)
 
 
-@app.route("/", methods = ['GET'])
-def main():
-    return render_template("hub.html")
+# @app.route("/", methods = ['GET'])
+# def main():
+#     return render_template("hub.html")
 #ПЕРЕНЕС ЧАСТЬ ЗА РЕГИСТРАЦИЮ(в бизнес логику поехала чисто регистрация(т.е. получение имени и т.д. надо где-то потом реализовать)
+#up. перенес
 # @app.route("/reg/", methods = ['POST'])
 # def reg_form_post():
 #     username = request.form.get('username')
@@ -147,46 +148,46 @@ def main():
 #         return redirect(url_for('reg_form_get'))
 
 
-@app.route("/reg/", methods = ['GET'])
-def reg_form_get():
-    return render_template('register.html')
+# @app.route("/reg/", methods = ['GET'])
+# def reg_form_get():
+#     return render_template('register.html')
 
 
-@app.route("/dashboard/")
-def dashboard():
-    return render_template("rickroll.html")
+# @app.route("/dashboard/")
+# def dashboard():
+#     return render_template("rickroll.html")
 
 
-@app.route("/log/", methods=['GET'])
-def log_form_get():
-    return render_template('login.html')
+# @app.route("/log/", methods=['GET'])
+# def log_form_get():
+#     return render_template('login.html')
 
 
-@app.route("/log/", methods=['POST'])
-def log_form_post():
-    username = request.form.get('username')
-    password = request.form.get('password')
-
-    if User.check_user(username, password):
-        flash("Успех, авторизация прошла успешно", "success")
-        return redirect(url_for('dashboard'))
-    else:
-        flash("Ошибка: логин или пароль не верны", "error")
-        return redirect(url_for('log_form_get'))
+# @app.route("/log/", methods=['POST'])
+# def log_form_post():
+#     username = request.form.get('username')
+#     password = request.form.get('password')
+#
+#     if User.check_user(username, password):
+#         flash("Успех, авторизация прошла успешно", "success")
+#         return redirect(url_for('dashboard'))
+#     else:
+#         flash("Ошибка: логин или пароль не верны", "error")
+#         return redirect(url_for('log_form_get'))
 
 
     #после логирования на rick-roll(vibe-codding)
 
 
 #ОБЯЗАТЕЛЬНО ПОСЛЕДНИЙ
-@app.route("/", defaults={"path": ""})  # перенаправление всего
-@app.route("/<path:path>")
-def avtobus(path):
-    return render_template("404.html")
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
+# @app.route("/", defaults={"path": ""})  # перенаправление всего
+# @app.route("/<path:path>")
+# def avtobus(path):
+#     return render_template("404.html")
+#
+#
+# if __name__ == "__main__":
+#     app.run(debug=True)
 
     #просто технический код для моего удобства при переносе с устройства на устройство(не удобно базы данных переносить(((()
 # CREATE TABLE public.users (

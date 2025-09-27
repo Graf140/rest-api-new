@@ -25,8 +25,8 @@ class UserService:
 
 
     @staticmethod
-    def authenticate_user(username, password):
-        user = UserRepository.find_by_username(username)
+    def login_user(username, password):
+        user = UserRepository.get_user_by_name(username)
         if user and check_password_hash(user['password_hash'], password):
             return True
         return False
