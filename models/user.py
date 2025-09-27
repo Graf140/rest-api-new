@@ -1,6 +1,6 @@
 # Data Access Layer
 
-from .db import get_db_connection
+from .db import get_db_connection, release_db_connection
 import psycopg2 #бд
 from psycopg2.extras import RealDictCursor
 
@@ -13,7 +13,7 @@ class UserRepository:
         cur.execute('SELECT * FROM users')
         users = cur.fetchall()
         cur.close()
-        conn.close()
+        release_db_connection(conn)
         return users
 
 
@@ -27,7 +27,7 @@ class UserRepository:
             return count
         finally:
             cur.close()
-            conn.close()
+            release_db_connection(conn)
 
 
     @staticmethod
@@ -39,7 +39,7 @@ class UserRepository:
             return cur.fetchone() is not None
         finally:
             cur.close()
-            conn.close()
+            release_db_connection(conn)
 
 
     @staticmethod
@@ -49,7 +49,7 @@ class UserRepository:
         cur.execute('SELECT * FROM users WHERE user_id = %s', (user_id,))
         user = cur.fetchone()
         cur.close()
-        conn.close()
+        release_db_connection(conn)
         return user
 
 
@@ -60,7 +60,7 @@ class UserRepository:
         cur.execute('SELECT * FROM users WHERE name = %s', (name,))
         user = cur.fetchone()
         cur.close()
-        conn.close()
+        release_db_connection(conn)
         return user
 
 
@@ -85,4 +85,4 @@ class UserRepository:
 
         finally:
             cur.close()
-            conn.close()
+            release_db_connection(conn)
