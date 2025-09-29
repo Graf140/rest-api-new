@@ -36,7 +36,7 @@ class UserRepository:
         cur = conn.cursor()
         try:
             cur.execute('SELECT * FROM users WHERE name = %s', (name,))
-            return cur.fetchone() is not None
+            return cur.fetchone() is not None #шпора: вернет True или False
         finally:
             cur.close()
             release_db_connection(conn)
@@ -65,7 +65,7 @@ class UserRepository:
 
 
     @staticmethod
-    def add_user(name, password_hash):
+    def create_user(name, password_hash):
         conn = get_db_connection()
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
