@@ -1,8 +1,10 @@
 # Data Access Layer
 
 from .db import get_db_connection, release_db_connection
-import psycopg2 #бд
+from psycopg2 import DatabaseError
 from psycopg2.extras import RealDictCursor
+from psycopg2.errors import UniqueViolation
+from exceptions import *
 
 
 class UserRepository:
@@ -69,19 +71,21 @@ class UserRepository:
         conn = get_db_connection()
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            cur.execute('SELECT 1 FROM users WHERE name = %s', (name,))
-            if cur.fetchone():
-                print(f"Ошибка: пользователь с именем '{name}' уже существует.")
-                return ("False users")
+            # cur.execute('SELECT 1 FROM users WHERE name = %s', (name,))
+            # if cur.fetchone():
+            #     print(f"Ошибка: пользователь с именем '{name}' уже существует.")
+            #     return ("False users")
             cur.execute('INSERT INTO users (name, password_hash) VALUES (%s, %s)', (name, password_hash))
             conn.commit()
-            return ("True")
+            return True
 
-        except Exception as e:
-            # Любая ошибка
+        except DatabaseError: #не бизнес ошибка, не обрабатываем как кастомную
+            conn.rollback
+            raise
+
+        except UniqueViolation: #когда добавляешь уникальное имя(если оно уже есть), то выскакивает эта ошибка
             conn.rollback()
-            print(f"Неожиданная ошибка при добавлении пользователя: {e}")
-            return ("False")
+            raise UserAlreadyExistsError(f"Пользователь с именем '{name}' уже существует")
 
         finally:
             cur.close()
