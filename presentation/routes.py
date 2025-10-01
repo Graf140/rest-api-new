@@ -4,6 +4,8 @@ from flask import Flask, jsonify, request
 
 from models.user import UserRepository
 from services.user_service import UserService
+from services.auth_service import authenticate_user, generate_jwt_token
+
 
 
 #-----------------------Rest API-------------------------
@@ -56,16 +58,20 @@ def register_routes(app):
         username = data.get('username')
         password = data.get('password')
 
-        if not username or not password:
-            return jsonify({"error": "Введите логин или пароль"})
+        user = authenticate_user(username, password)
+        token = generate_jwt_token(user_id=user['user_id'], username=user['name'])
+        return jsonify({
+            "message": "Авторизация успешна",
+            "token": token,
+            "user": {
+                "id": user['user_id'],
+                "username": user['name']
+            }
+        }), 200
 
-        if UserService.login_user(username, password):
-            return jsonify({"success": "Авторизация успешна"})
-        else:
-            return jsonify({"error": "Не существует пользователя с данным логином и паролем"})
 
-
-    @app.route("/", defaults={"path": ""})  # перенаправление всего
-    @app.route("/<path:path>")
-    def avtobus(path):
-        return jsonify("success")
+    #нейронка порекомендовала удолить ловец. ПОЧЕМУ?(спросить)
+    # @app.route("/", defaults={"path": ""})  # перенаправление всего
+    # @app.route("/<path:path>")
+    # def avtobus(path):
+    #     return jsonify("success")
