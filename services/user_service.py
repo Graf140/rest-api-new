@@ -21,17 +21,12 @@ class UserService:
         #эту ошибку добавили в обработку
         return True
 
-
-    # @staticmethod
-    # def login_user(username, password):
-    #     if not username or not password:
-    #         raise ValidationError("Логин и пароль обязательны")
-    #
-    #     user = UserRepository.get_user_by_name(username)
-    #     if not user:
-    #         raise UserNotFoundError("Пользователь не найден")
-    #
-    #     if not check_password_hash(user['password_hash'], password):
-    #         raise InvalidPasswordError("Неверный пароль")
-    #
-    #     return True
+    @staticmethod
+    def get_user_profile(user_id: int):
+        user = UserRepository.get_user_by_id(user_id)
+        if not user:
+            raise UserNotFoundError("Пользователь не найден")
+        return {
+            "id": user['user_id'],
+            "username": user['name']
+        }

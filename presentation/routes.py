@@ -1,11 +1,11 @@
 #presentation layer, чисто маршруты
 
-from flask import Flask, jsonify, request
-
+from flask import Flask, jsonify, request, current_app
 from models.user import UserRepository
 from services.user_service import UserService
 from services.auth_service import authenticate_user, generate_jwt_token
-
+import jwt
+from exceptions import UserNotFoundError
 
 
 #-----------------------Rest API-------------------------
@@ -47,7 +47,10 @@ def register_routes(app):
         password = data.get('password')
         confirm_password = data.get('confirm_password')
 
-        success = UserService.register_user(username, password, confirm_password)
+        UserService.register_user(username, password, confirm_password)
+
+        return jsonify({"message": "Пользователь успешно зарегистрирован"}), 201
+
 
     @app.route("/api/users/log/", methods=['POST'])
     def log_user():
@@ -70,8 +73,30 @@ def register_routes(app):
         }), 200
 
 
-    #нейронка порекомендовала удолить ловец. ПОЧЕМУ?(спросить)
-    # @app.route("/", defaults={"path": ""})  # перенаправление всего
-    # @app.route("/<path:path>")
-    # def avtobus(path):
-    #     return jsonify("success")
+#ШПОРА:
+#пример запроса:    {Authorization: Bearer <jwt_токен>} - ну соответственно JSONчик с ключОм аавторизация, воот
+#ща буду дергать через Postman
+    @app.route("/api/profile", methods=['GET'])
+    def get_profile():
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "Требуется токен авторизации"})
+        auth_token = auth_header[7:]
+
+        try:
+            payload = jwt.decode(
+                auth_token,
+                current_app.config['SECRET_KEY'],
+                algorithms=['HS256']
+            )
+            user_id = payload['user_id']
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Токен просрочен"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Неверный токен"}), 401
+
+        try:
+            profile = UserService.get_user_profile(user_id)
+            return jsonify(profile)
+        except UserNotFoundError:
+            return jsonify({"error": "Пользователь не найден"}), 404
