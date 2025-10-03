@@ -1,3 +1,5 @@
+#exceptions, глобально храню
+
 class UserAlreadyExistsError(ValueError): #пользователь совпадает уже
     pass
 
