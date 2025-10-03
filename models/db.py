@@ -1,8 +1,6 @@
 # Data Access Layer
 import psycopg2 #бд
 from psycopg2 import pool #для пула, логично
-import os
-from dotenv import load_dotenv
 
 #правка от 30.09 обеденная
 from config.database import DatabaseConfig

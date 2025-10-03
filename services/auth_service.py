@@ -4,35 +4,48 @@
 
 import jwt
 import datetime
-from flask import current_app
+from flask import current_app, jsonify
 from werkzeug.security import check_password_hash
 from models.user import UserRepository
 from exceptions import UserNotFoundError, InvalidPasswordError, ValidationError
 
-def authenticate_user(username, password):
-    if not username or not password:
-        raise ValidationError("Логин и пароль обязательны для заполнения")
+class AuthService:
+    def authentificate_user(username, password):
+        if not username or not password:
+            raise ValidationError("Логин и пароль обязательны для заполнения")
 
-    user = UserRepository.get_user_by_name(username)
-    if not user:
-        raise UserNotFoundError("Пользователь не найден")
+        user = UserRepository.get_user_by_name(username)
+        if not user:
+            raise UserNotFoundError("Пользователь не найден")
 
-    if not check_password_hash(user['password_hash'], password):
-        raise InvalidPasswordError("Неверный пароль")
+        if not check_password_hash(user['password_hash'], password):
+            raise InvalidPasswordError("Неверный пароль")
+        return user
 
-    return user
+    def generate_jwt_token(user_id, username):
 
-def generate_jwt_token(user_id, username):
+        # Генерирует JWT-токен для авторизованного пользователя
+        # Токен действителен 24 часа(шпорняк)
 
-    # Генерирует JWT-токен для авторизованного пользователя
-    # Токен действителен 24 часа(шпорняк)
+        payload = {
+            'user_id': user_id,
+            'username': username,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24),
+            'iat': datetime.datetime.utcnow()
+        }
+        secret_key = current_app.config['SECRET_KEY']
+        token = jwt.encode(payload, secret_key, algorithm='HS256')
+        return token
 
-    payload = {
-        'user_id': user_id,
-        'username': username,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24),
-        'iat': datetime.datetime.utcnow()
-    }
-    secret_key = current_app.config['SECRET_KEY']
-    token = jwt.encode(payload, secret_key, algorithm='HS256')
-    return token
+    def authentificate_token(token):
+        try:
+            payload = jwt.decode(
+                token,
+                current_app.config['SECRET_KEY'],
+                algorithms=['HS256']
+            )
+            return payload['user_id']
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Токен просрочен"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Неверный токен"}), 401
