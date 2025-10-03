@@ -1,9 +1,8 @@
 # Business Logic Layer
 #для меня(проверка паролей, хеширование и валидация(пупупууу... валидацию добавить позже))
 
-from werkzeug.security import generate_password_hash
 from models.user import UserRepository
-from werkzeug.security import generate_password_hash, check_password_hash #также пароли
+from werkzeug.security import generate_password_hash #также пароли
 from exceptions import *
 
 

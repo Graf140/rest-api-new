@@ -1,11 +1,11 @@
 #presentation layer, чисто маршруты
 
-from flask import Flask, jsonify, request, current_app
+from flask import jsonify, request, current_app
 from models.user import UserRepository
+from services.forum_service import ForumService
 from services.user_service import UserService
-from services.auth_service import authenticate_user, generate_jwt_token
-import jwt
-from exceptions import UserNotFoundError
+from services.auth_service import AuthService
+from exceptions import *
 
 
 #-----------------------Rest API-------------------------
@@ -58,8 +58,8 @@ def register_routes(app):
         username = data.get('username')
         password = data.get('password')
 
-        user = authenticate_user(username, password)
-        token = generate_jwt_token(user_id=user['user_id'], username=user['name'])
+        user = AuthService.authentificate_user(username, password)
+        token = AuthService.generate_jwt_token(user_id=user['user_id'], username=user['name'])
 
         return jsonify({
             "message": "Авторизация успешна",
@@ -80,20 +80,48 @@ def register_routes(app):
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({"error": "Требуется токен авторизации"})
         auth_token = auth_header[7:]
-        try:
-            payload = jwt.decode(
-                auth_token,
-                current_app.config['SECRET_KEY'],
-                algorithms=['HS256']
-            )
-            user_id = payload['user_id']
-        except jwt.ExpiredSignatureError:
-            return jsonify({"error": "Токен просрочен"}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({"error": "Неверный токен"}), 401
-
+        user_id = AuthService.authentificate_token(auth_token)
         try:
             profile = UserService.get_user_profile(user_id)
             return jsonify(profile)
         except UserNotFoundError:
             return jsonify({"error": "Пользователь не найден"}), 404
+
+#-----------------------Rest API, но добавляю форум-------------------------
+    @app.route("/api/forum/posts/", methods=['GET'])
+    def get_forum_posts():
+        data = ForumService.get_all_posts()
+        return jsonify(data)
+
+    @app.route("/api/forum/posts/", methods=['POST'])
+    def put_forum_posts():
+        if not request.is_json:
+            return jsonify({"error": "Ожидался JSON"}), 400
+
+        data = request.get_json()
+        title = data.get('title')
+        content = data.get('content')
+
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "Требуется токен авторизации"}), 401
+
+        auth_token = auth_header[7:]
+        user_id = AuthService.authentificate_token(auth_token)
+
+        try:
+            post = ForumService.create_post(user_id, title, content)
+            return jsonify(post), 201
+        except ValidationError as e:
+            return jsonify({"error": str(e)}), 400
+        except UserNotFoundError as e:
+            return jsonify({"error": str(e)}), 404
+
+
+    @app.route("/api/forum/posts/<int:post_id>/", methods=['GET'])
+    def get_forum_post(post_id):
+        try:
+            post = ForumService.get_post_by_id(post_id)
+            return jsonify(post)
+        except PostNotFoundError as e:
+            return jsonify({"error": str(e)}), 404

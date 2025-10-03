@@ -28,6 +28,13 @@ def register_error_handlers(app):
     def handle_validation_error(e):
         return jsonify({"error": str(e)}), 400
 
+    @app.errorhandler(PostNotFoundError)
+    def handle_post_not_found(e):
+        return jsonify({"error": str(e)}), 404
+
+    @app.errorhandler(404)
+    def handle_not_found(e):
+        return jsonify({"error": "Маршрут не найден"}), 404
 
     # Обработка всех остальных ошибок
     @app.errorhandler(Exception)

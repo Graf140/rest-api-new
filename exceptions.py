@@ -14,3 +14,6 @@ class UserNotFoundError(ValueError): #пользователь не найден
 
 class ValidationError(ValueError): #ошибка валидации
     pass
+
+class PostNotFoundError(ValueError):
+    pass
