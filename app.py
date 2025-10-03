@@ -14,6 +14,7 @@ if not secret_key:
 
 app = Flask(__name__)
 app.secret_key = secret_key
+app.config['SECRET_KEY'] = secret_key
 
 register_routes(app)
 register_error_handlers(app)

@@ -32,8 +32,6 @@ def register_error_handlers(app):
     # Обработка всех остальных ошибок
     @app.errorhandler(Exception)
     def handle_exception(e):
-        # # Логируем полную ошибку (включая стек) #не разобрался с логгером
-        # app.logger.error("Unhandled exception", exc_info=True)
+        app.logger.error("необработанное исключение", exc_info=True)
 
-        # Возвращаем безопасное сообщение
         return jsonify({"error": "Произошла внутренняя ошибка"}), 500

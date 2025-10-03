@@ -37,8 +37,6 @@ def register_routes(app):
 
     @app.route("/api/users/reg/", methods=['POST'])
     def add_user():
-        # if not request.is_json:
-        #     return jsonify({"error": "Ожидался JSON"}), 400
         if not request.is_json:
             return jsonify({"error": "Ожидался JSON"}), 400
 
@@ -56,13 +54,13 @@ def register_routes(app):
     def log_user():
         if not request.is_json:
             return jsonify({"error": "Ожидался JSON"}), 400
-
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')
 
         user = authenticate_user(username, password)
         token = generate_jwt_token(user_id=user['user_id'], username=user['name'])
+
         return jsonify({
             "message": "Авторизация успешна",
             "token": token,
@@ -76,13 +74,12 @@ def register_routes(app):
 #ШПОРА:
 #пример запроса:    {Authorization: Bearer <jwt_токен>} - ну соответственно JSONчик с ключОм аавторизация, воот
 #ща буду дергать через Postman
-    @app.route("/api/profile", methods=['GET'])
+    @app.route("/api/profile", methods=['POST'])
     def get_profile():
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({"error": "Требуется токен авторизации"})
         auth_token = auth_header[7:]
-
         try:
             payload = jwt.decode(
                 auth_token,

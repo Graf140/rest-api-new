@@ -3,9 +3,8 @@ import psycopg2.errors
 
 from .db import get_db_connection, release_db_connection
 from psycopg2 import DatabaseError
-from psycopg2 import errors
 from psycopg2.extras import RealDictCursor
-# from psycopg2.errors import UniqueViolation
+from psycopg2.errors import UniqueViolation
 from exceptions import *
 
 
@@ -77,21 +76,13 @@ class UserRepository:
             conn.commit()
             return True
 
-        except DatabaseError: #не бизнес ошибка, не обрабатываем как кастомную
-            conn.rollback()
-            raise
-
-        except psycopg2.errors.UniqueViolation: #когда добавляешь уникальное имя(если оно уже есть), то выскакивает эта ошибка
+        except UniqueViolation: #когда добавляешь уникальное имя(если оно уже есть), то выскакивает эта ошибка
             conn.rollback()
             raise UserAlreadyExistsError(f"Пользователь с именем '{name}' уже существует")
 
-        # except Exception as e:
-        #     # ЛОВИМ ВСЁ и печатаем тип ошибки
-        #     print("🚨 Тип ошибки:", type(e).__name__)
-        #     print("🚨 Ошибка:", str(e))
-        #     conn.rollback()
-        #     # Временно выбрасываем UserAlreadyExistsError всегда
-        #     raise UserAlreadyExistsError("ТЕСТ: пользователь уже существует")
+        except DatabaseError: #не бизнес ошибка, не обрабатываем как кастомную
+            conn.rollback()
+            raise
 
         finally:
             if cur is not None:
