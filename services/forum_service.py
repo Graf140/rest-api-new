@@ -1,13 +1,13 @@
-from models.user import UserRepository
+from repositories.user import UserRepository
 from werkzeug.security import generate_password_hash #также пароли
 from exceptions import *
-from models.forum_post import ForumPost
+from repositories.forum_post import ForumPost
 
 class ForumService:
     @staticmethod
     def create_post(user_id: int, title: str, content: str):
-        if not title or not content:
-            raise ValidationError("Заголовок и содержание обязательны")
+        # if not title or not content:
+        #     raise ValidationError("Заголовок и содержание обязательны")
 
         if not UserRepository.get_user_by_id(user_id):
             raise UserNotFoundError("Пользователь не найден")

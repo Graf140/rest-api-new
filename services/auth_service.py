@@ -6,13 +6,15 @@ import jwt
 import datetime
 from flask import current_app, jsonify
 from werkzeug.security import check_password_hash
-from models.user import UserRepository
-from exceptions import UserNotFoundError, InvalidPasswordError, ValidationError
+from repositories.user import UserRepository
+from exceptions import *
 
 class AuthService:
     def authentificate_user(username, password):
-        if not username or not password:
-            raise ValidationError("Логин и пароль обязательны для заполнения")
+        #ДОБАВИЛ валидацию через marshmallow
+
+        # if not username or not password:
+        #     raise ValidationError("Логин и пароль обязательны для заполнения")
 
         user = UserRepository.get_user_by_name(username)
         if not user:
@@ -46,6 +48,6 @@ class AuthService:
             )
             return payload['user_id']
         except jwt.ExpiredSignatureError:
-            return jsonify({"error": "Токен просрочен"}), 401
+            raise ExpiredTokenError("Токен просрочен")
         except jwt.InvalidTokenError:
-            return jsonify({"error": "Неверный токен"}), 401
+            raise InvalidTokenError("Неверный токен")

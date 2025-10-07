@@ -1,19 +1,21 @@
 # Business Logic Layer
 #для меня(проверка паролей, хеширование и валидация(пупупууу... валидацию добавить позже))
 
-from models.user import UserRepository
+from repositories.user import UserRepository
 from werkzeug.security import generate_password_hash #также пароли
 from exceptions import *
 
 
 class UserService:
     @staticmethod
-    def register_user(username, password, confirm_password):
-        if not username or not password or not confirm_password:
-            raise ValidationError("Все поля обязательны для заполнения")
+    def register_user(username, password):
+        #!!!ДОБАВИЛ валидацию через marshmallow в presentation!!!(в next commit'е delete)
 
-        if password != confirm_password:
-            raise InvalidPasswordError("Пароли не совпадают")
+        # if not username or not password or not confirm_password:
+        #     raise ValidationError("Все поля обязательны для заполнения")
+        #
+        # if password != confirm_password:
+        #     raise InvalidPasswordError("Пароли не совпадают")
 
         hashed_password = generate_password_hash(password)
         UserRepository.create_user(username, hashed_password)  # Может выбросить UserAlreadyExistsError
