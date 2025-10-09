@@ -3,7 +3,8 @@
 from flask import Flask
 from dotenv import load_dotenv
 import os
-from presentation.routes import register_routes
+from presentation.routes.user_bp import user_bp
+from presentation.routes.forum_bp import forum_bp
 from presentation.error_handlers import register_error_handlers
 
 load_dotenv()
@@ -16,7 +17,9 @@ app = Flask(__name__)
 app.secret_key = secret_key
 app.config['SECRET_KEY'] = secret_key
 
-register_routes(app)
+app.register_blueprint(user_bp)
+app.register_blueprint(forum_bp)
+
 register_error_handlers(app)
 
 if __name__ == "__main__":

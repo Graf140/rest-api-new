@@ -6,30 +6,24 @@ import jwt
 import datetime
 from flask import current_app, jsonify
 from werkzeug.security import check_password_hash
-from models.user import UserRepository
-from exceptions import UserNotFoundError, InvalidPasswordError, ValidationError
+from repositories.user import UserRepository
+from exceptions import *
+
 
 class AuthService:
-    def authentificate_user(username, password):
-        if not username or not password:
-            raise ValidationError("Логин и пароль обязательны для заполнения")
-
-        user = UserRepository.get_user_by_name(username)
+    def authenticate_user(dto):
+        user = UserRepository.get_user_by_name(dto.username)
         if not user:
             raise UserNotFoundError("Пользователь не найден")
 
-        if not check_password_hash(user['password_hash'], password):
+        if not check_password_hash(user['password_hash'], dto.password):
             raise InvalidPasswordError("Неверный пароль")
         return user
 
-    def generate_jwt_token(user_id, username):
-
-        # Генерирует JWT-токен для авторизованного пользователя
-        # Токен действителен 24 часа(шпорняк)
-
+    def generate_jwt_token(dto):
         payload = {
-            'user_id': user_id,
-            'username': username,
+            'user_id': dto.user_id,
+            'username': dto.username,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24),
             'iat': datetime.datetime.utcnow()
         }
@@ -46,6 +40,6 @@ class AuthService:
             )
             return payload['user_id']
         except jwt.ExpiredSignatureError:
-            return jsonify({"error": "Токен просрочен"}), 401
+            raise ExpiredTokenError("Токен просрочен")
         except jwt.InvalidTokenError:
-            return jsonify({"error": "Неверный токен"}), 401
+            raise InvalidTokenError("Неверный токен")

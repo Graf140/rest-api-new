@@ -13,7 +13,17 @@ class UserNotFoundError(ValueError): #пользователь не найден
     pass
 
 class ValidationError(ValueError): #ошибка валидации
+    def __init__(self, *args: object):
+        super().__init__(args)
+        self.messages = None
+
     pass
 
 class PostNotFoundError(ValueError):
+    pass
+
+class ExpiredTokenError(ValueError):
+    pass
+
+class InvalidTokenError(ValueError):
     pass

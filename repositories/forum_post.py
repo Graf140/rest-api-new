@@ -39,7 +39,7 @@ class ForumPost:
         conn = get_db_connection()
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            cur.execute('SELECT * FROM forum_posts WHERE post_id = %s', (post_id))
+            cur.execute('SELECT * FROM forum_posts WHERE post_id = %s', (post_id,))
             data = cur.fetchone()
             return data
         finally:
@@ -49,10 +49,10 @@ class ForumPost:
 
     @staticmethod
     def get_post_by_username(username):
-        conn = get_db_connection();
+        conn = get_db_connection()
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            cur.execute('SELECT * FROM forum_posts WHERE username = %s', (username))
+            cur.execute('SELECT * FROM forum_posts WHERE username = %s', (username,))
             data = cur.fetchone()
             return data
         finally:
