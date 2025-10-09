@@ -3,7 +3,6 @@ from flask import request, jsonify, g
 from services.auth_service import AuthService
 from exceptions import ExpiredTokenError, InvalidTokenError
 from marshmallow import ValidationError as MarshmallowValidationError
-import marshmallow
 
 
 def jwt_required(func):

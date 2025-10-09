@@ -19,7 +19,6 @@ class UserRepository:
         release_db_connection(conn)
         return users
 
-
     @staticmethod
     def get_users_count():
         conn = get_db_connection()
@@ -32,18 +31,16 @@ class UserRepository:
             cur.close()
             release_db_connection(conn)
 
-
     @staticmethod
-    def user_exists(name):
+    def user_exists(username):
         conn = get_db_connection()
         cur = conn.cursor()
         try:
-            cur.execute('SELECT * FROM users WHERE name = %s', (name,))
+            cur.execute('SELECT * FROM users WHERE name = %s', (username,))
             return cur.fetchone() is not None #шпора: вернет True или False
         finally:
             cur.close()
             release_db_connection(conn)
-
 
     @staticmethod
     def get_user_by_id(user_id):
@@ -55,17 +52,15 @@ class UserRepository:
         release_db_connection(conn)
         return user
 
-
     @staticmethod
-    def get_user_by_name(name):
+    def get_user_by_name(username):
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute('SELECT * FROM users WHERE name = %s', (name,))
+        cur.execute('SELECT * FROM users WHERE name = %s', (username,))
         user = cur.fetchone()
         cur.close()
         release_db_connection(conn)
         return user
-
 
     @staticmethod
     def create_user(name, password_hash):
